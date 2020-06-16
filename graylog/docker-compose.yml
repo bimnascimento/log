@@ -116,10 +116,11 @@ services:
     volumes:
       - "logstash-data:/usr/share/logstash/config" 
       # - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
-      - ./logstash/logstash.conf:/etc/logstash/conf.d/logstash.conf
+      # - ./logstash/logstash.conf:/etc/logstash/conf.d/logstash.conf
+      - ./logstash/logstash.conf:/usr/share/logstash/config/logstash.conf
       - ./logs:/tmp/logs
     # command: "sh -c 'bin/logstash-plugin install logstash-output-gelf && bin/logstash-plugin install logstash-filter-translate && bin/logstash-plugin install logstash-filter-json && logstash -f /etc/logstash/conf.d/logstash.conf'"
-    command: "sh -c 'bin/logstash-plugin install logstash-output-gelf && logstash -f /etc/logstash/conf.d/logstash.conf'"
+    command: "sh -c 'bin/logstash-plugin install logstash-output-gelf && logstash -f /usr/share/logstash/config/logstash.conf'"
     networks:
       - apm
 
