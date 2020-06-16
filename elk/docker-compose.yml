@@ -18,8 +18,14 @@ services:
       - transport.host=localhost
       - network.host=0.0.0.0
       - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
+      # Disable X-Pack security
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.watcher.enabled=false
+      - xpack.monitoring.enabled=false
+      - xpack.security.audit.enabled=false
+      - xpack.ml.enabled=false
+      - xpack.graph.enabled=false
     ulimits:
       memlock:
         soft: -1
@@ -41,14 +47,19 @@ services:
     links:
       - elastic-elk:elasticsearch
     restart: always
+    environment: 
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
     depends_on:
       - elastic-elk
     volumes:
       - "logstash-data:/usr/share/logstash/config" 
-      # - ./logstash/logstash.conf:/etc/logstash/conf.d/logstash.conf
+      # - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./logstash/logstash.conf:/etc/logstash/conf.d/logstash.conf
       - ./logs:/tmp/logs
-    # command: -e 'input { gelf {} } filter { json { source => "message" } date { match => ["timestamp", "UNIX"] } mutate { remove_field => [ "command", "created" ] } }  output { elasticsearch { hosts => ["elasticsearch:9200"] } stdout { } }'
-    command: -e 'input { gelf { port => 12201 } } output { stdout {} elasticsearch { hosts => ["http://elasticsearch:9200"] } }'
+    command: logstash -f /etc/logstash/conf.d/logstash.conf
+      # bin/logstash-plugin install logstash-filter-translate
+      # bin/logstash-plugin install logstash-filter-json
     networks:
       - apm
 

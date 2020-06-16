@@ -98,22 +98,22 @@ services:
       - ./graylog-plugin/graylog-plugin-slack-3.1.0.jar:/usr/share/graylog/data/plugin/graylog-plugin-slack-3.1.0.jar
     tty: true
 
-  # http-graylog:
-  #   container_name: http-graylog
-  #   image: httpd:latest
-  #   restart: always
-  #   environment:                                                    
-  #     - "TZ=America/Sao_Paulo"
-  #   ports:
-  #     - "82:80"
-  #   tty: true
-  #   logging:
-  #     driver: gelf
-  #     options:
-  #       gelf-address: "udp://127.0.0.1:12202"
-  #       tag: "http-graylog-12202"
-  #   networks:
-  #     - apm
+  http-graylog:
+    container_name: http-graylog
+    image: httpd:latest
+    restart: always
+    environment:                                                    
+      - "TZ=America/Sao_Paulo"
+    ports:
+      - "82:80"
+    tty: true
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12202"
+        tag: "http-graylog-12202"
+    networks:
+      - apm
 
 networks: 
   apm:
