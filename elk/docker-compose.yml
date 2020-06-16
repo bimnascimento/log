@@ -1,0 +1,103 @@
+version: "2"
+
+services: 
+
+  # ELK --------------------------------
+
+  elastic-elk:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.1
+    ports:
+      - "9200:9200"
+      # - "9300:9300"
+    container_name: elastic-elk
+    restart: always
+    environment: 
+      - "TZ=America/Sao_Paulo"
+      - cluster.name=elk
+      - http.host=0.0.0.0
+      - transport.host=localhost
+      - network.host=0.0.0.0
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 2g
+    networks: 
+      - apm
+    volumes:
+      - "elastic-elk-data:/usr/share/elasticsearch/data"
+      # - "./elastic/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
+      # - "./elastic/plugins:/usr/share/elasticsearch/plugins"
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.6.1
+    container_name: logstash
+    ports:
+      - "12201:12201/udp"
+      - "5000:5000"
+    links:
+      - elastic-elk:elasticsearch
+    restart: always
+    depends_on:
+      - elastic-elk
+    volumes:
+      - "logstash-data:/usr/share/logstash/config" 
+      # - ./logstash/logstash.conf:/etc/logstash/conf.d/logstash.conf
+      - ./logs:/tmp/logs
+    # command: -e 'input { gelf {} } filter { json { source => "message" } date { match => ["timestamp", "UNIX"] } mutate { remove_field => [ "command", "created" ] } }  output { elasticsearch { hosts => ["elasticsearch:9200"] } stdout { } }'
+    command: -e 'input { gelf { port => 12201 } } output { stdout {} elasticsearch { hosts => ["http://elasticsearch:9200"] } }'
+    networks:
+      - apm
+
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:7.6.1
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - "http.host=0.0.0.0"
+      - "network.host=0.0.0.0"
+      - "discovery.type=single-node"
+      - "TZ=America/Sao_Paulo"
+    volumes:
+      - "kibana-data:/usr/share/kibana/config"
+    #   - ./config/kibana/config:/usr/share/kibana/config
+    tty: true
+    links:
+      - elastic-elk:elasticsearch
+    depends_on:
+      - elastic-elk
+    ports: 
+      - 5601:5601
+    restart: always
+    networks: 
+      - apm
+
+  http-logstash:
+    container_name: http-logstash
+    image: httpd:latest
+    restart: always
+    environment:                                                    
+      - "TZ=America/Sao_Paulo"
+    ports:
+      - "81:80"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: "http-logstash-12201"
+    networks:
+      - apm
+networks: 
+  apm:
+    driver: bridge
+
+volumes:
+  kibana-data:
+    driver: local
+  elastic-elk-data:
+    driver: local
+  logstash-data:
+    driver: local
