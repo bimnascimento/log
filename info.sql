@@ -29,5 +29,6 @@ http://localhost:9210/_cat/indices?v&pretty
 docker exec mongodb sh -c "ls -la"
 docker exec graylog sh -c "ls -la /usr/share/graylog/data/"
 docker exec kibana sh -c "ls -la /"
+docker exec logstash sh -c "bin/logstash-plugin install logstash-output-gelf"
 
 docker cp graylog:/usr/share/graylog/data/config/graylog.conf ./config/graylog/config/graylog.conf

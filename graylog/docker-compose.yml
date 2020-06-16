@@ -105,21 +105,21 @@ services:
       - "12201:12201/udp"
       - "5000:5000"
     links:
-      - elastic-graylog:elasticsearch
+      - graylog:graylog
+      # - elastic-graylog:elasticsearch
     restart: always
     environment: 
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
-    depends_on:
-      - elastic-graylog
+    # depends_on:
+    #   - elastic-graylog
     volumes:
       - "logstash-data:/usr/share/logstash/config" 
       # - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
       - ./logstash/logstash.conf:/etc/logstash/conf.d/logstash.conf
       - ./logs:/tmp/logs
-    command: logstash -f /etc/logstash/conf.d/logstash.conf
-      # bin/logstash-plugin install logstash-filter-translate
-      # bin/logstash-plugin install logstash-filter-json
+    # command: "sh -c 'bin/logstash-plugin install logstash-output-gelf && bin/logstash-plugin install logstash-filter-translate && bin/logstash-plugin install logstash-filter-json && logstash -f /etc/logstash/conf.d/logstash.conf'"
+    command: "sh -c 'bin/logstash-plugin install logstash-output-gelf && logstash -f /etc/logstash/conf.d/logstash.conf'"
     networks:
       - apm
 
