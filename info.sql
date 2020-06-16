@@ -20,5 +20,10 @@ mongodump --host localhost --port 27017 --db=meteor --gzip --archive=meteor.gz
 mongodump --host localhost --port 27017 --gzip --archive=/full.gz
 docker cp mongodb:/full.gz ./config/graylog/bkp
 
-mongorestore --host localhost --port 27017 --gzip --archive=/full.gz
-docker cp ./config/graylog/bkp mongodb:/full.gz
+docker exec -it mongodb /bin/sh mongorestore --host localhost --port 27017 --gzip --archive=/full.gz
+docker cp ./config/graylog/bkp/full.gz mongodb:/full.gz
+
+http://localhost:9210/_cat/indices?v&pretty
+
+
+docker exec mongodb sh -c "ls -la"
