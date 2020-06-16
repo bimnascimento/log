@@ -1,2 +1,2 @@
 @echo off
-rm -f ./logs/*
+rm -f ./logs/*.log
