@@ -98,6 +98,31 @@ services:
       - ./graylog-plugin/graylog-plugin-slack-3.1.0.jar:/usr/share/graylog/data/plugin/graylog-plugin-slack-3.1.0.jar
     tty: true
 
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.6.1
+    container_name: logstash
+    ports:
+      - "12201:12201/udp"
+      - "5000:5000"
+    links:
+      - elastic-graylog:elasticsearch
+    restart: always
+    environment: 
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
+    depends_on:
+      - elastic-graylog
+    volumes:
+      - "logstash-data:/usr/share/logstash/config" 
+      # - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./logstash/logstash.conf:/etc/logstash/conf.d/logstash.conf
+      - ./logs:/tmp/logs
+    command: logstash -f /etc/logstash/conf.d/logstash.conf
+      # bin/logstash-plugin install logstash-filter-translate
+      # bin/logstash-plugin install logstash-filter-json
+    networks:
+      - apm
+
   http-graylog:
     container_name: http-graylog
     image: httpd:latest
@@ -115,6 +140,22 @@ services:
     networks:
       - apm
 
+  http-logstash:
+    container_name: http-logstash
+    image: httpd:latest
+    restart: always
+    environment:                                                    
+      - "TZ=America/Sao_Paulo"
+    ports:
+      - "81:80"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12201"
+        tag: "http-logstash-12201"
+    networks:
+      - apm
+
 networks: 
   apm:
     driver: bridge
@@ -125,4 +166,6 @@ volumes:
   mongodb-data:
     driver: local
   graylog-data:
+    driver: local
+  logstash-data:
     driver: local
