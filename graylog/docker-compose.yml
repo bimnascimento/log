@@ -122,7 +122,8 @@ services:
       - ./logstash/logstash.conf:/usr/share/logstash/config/logstash.conf
       - ./logs:/tmp/logs
     # command: "sh -c 'bin/logstash-plugin install logstash-output-gelf && bin/logstash-plugin install logstash-filter-translate && bin/logstash-plugin install logstash-filter-json && logstash -f /etc/logstash/conf.d/logstash.conf'"
-    command: "sh -c 'bin/logstash-plugin install logstash-output-gelf && bin/logstash-plugin install logstash-filter-json && logstash -f /usr/share/logstash/config/logstash.conf'"
+    # command: "sh -c 'bin/logstash-plugin install --no-verify logstash-output-gelf && bin/logstash-plugin install --no-verify logstash-filter-json && bin/logstash-plugin install --no-verify logstash-codec-gzip_lines && logstash -f /usr/share/logstash/config/logstash.conf'"
+    command: "sh -c 'bin/logstash-plugin install --no-verify logstash-output-gelf && bin/logstash-plugin install --no-verify logstash-filter-json && logstash -f /usr/share/logstash/config/logstash.conf'"
     networks:
       - apm
 

@@ -1,0 +1,12 @@
+archer_body.log
+archer_endpoint.log
+Business.log
+core_body.log
+core_endpoint.log
+document_body.log
+document_endpoint.log
+sql.log
+stderr.log
+stdout.log
+Technical.log
+TechnicalFiltered.log
