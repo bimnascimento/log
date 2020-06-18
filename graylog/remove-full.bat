@@ -1,4 +1,4 @@
 @echo off
 REM mongodb/bkp-mongo
-rm -rf ./logs/*
+REM rm -rf ./logs/*
 docker-compose down --volumes

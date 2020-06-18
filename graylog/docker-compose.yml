@@ -53,12 +53,14 @@ services:
     networks:
       - apm
     volumes:
-      - "mongodb-data:/var/data"
+      # - "mongodb-data:/var/data"
+      - "mongodb-data:/data/db"
       # - "./config/mongodb/data-graylog:/var/data"
     tty: true
 
   graylog:
-    image: graylog/graylog:3.2.2
+    image: graylog/graylog:2.5.2-1
+    # image: graylog/graylog:3.3.1
     container_name: graylog
     restart: always
     environment:
@@ -66,7 +68,7 @@ services:
       TZ: America/Sao_Paulo
       GRAYLOG_MESSAGE_JOURNAL_MAX_SIZE: 2gb
       GRAYLOG_ROOT_TIMEZONE: America/Sao_Paulo
-      # GRAYLOG_WEB_ENDPOINT_URI: http://127.0.0.1:9000/api
+      GRAYLOG_WEB_ENDPOINT_URI: http://127.0.0.1:9000/api
       # GRAYLOG_ELASTICSEARCH_HOSTS: "http://127.0.0.1:9210"
       # GRAYLOG_TRANSPORT_EMAIL_ENABLED: 'true'
       # GRAYLOG_TRANSPORT_EMAIL_HOSTNAME: mail.example.com
@@ -92,21 +94,21 @@ services:
       - "9000:9000"
       - "12202:12202/udp"
     volumes:
-      - "graylog-data:/usr/share/graylog/data"
-      - ./graylog-plugin/graylog-plugin-backup-configuration-1.0.2.jar:/usr/share/graylog/data/plugin/graylog-plugin-backup-configuration-1.0.2.jar
-      - ./graylog-plugin/graylog-plugin-beats-2.5.1.jar:/usr/share/graylog/data/plugin/graylog-plugin-beats-2.5.1.jar
-      - ./graylog-plugin/graylog-plugin-slack-3.1.0.jar:/usr/share/graylog/data/plugin/graylog-plugin-slack-3.1.0.jar
+      - "graylog-data:/usr/share/graylog/data/journal"
+      # - ./graylog-plugin/graylog-plugin-backup-configuration-1.0.2.jar:/usr/share/graylog/data/plugin/graylog-plugin-backup-configuration-1.0.2.jar
+      # - ./graylog-plugin/graylog-plugin-beats-2.5.1.jar:/usr/share/graylog/data/plugin/graylog-plugin-beats-2.5.1.jar
+      # - ./graylog-plugin/graylog-plugin-slack-3.1.0.jar:/usr/share/graylog/data/plugin/graylog-plugin-slack-3.1.0.jar
     tty: true
 
-  logstash:
+  logstash-graylog:
     image: docker.elastic.co/logstash/logstash:7.6.1
-    container_name: logstash
+    container_name: logstash-graylog
     ports:
-      - "12201:12201/udp"
-      - "5000:5000"
+      - "12203:12203/udp"
+      # - "5000:5000"
     links:
       - graylog:graylog
-      # - elastic-graylog:elasticsearch
+      - elastic-graylog:elasticsearch
     restart: always
     environment: 
       - xpack.security.enabled=false
@@ -120,42 +122,42 @@ services:
       - ./logstash/logstash.conf:/usr/share/logstash/config/logstash.conf
       - ./logs:/tmp/logs
     # command: "sh -c 'bin/logstash-plugin install logstash-output-gelf && bin/logstash-plugin install logstash-filter-translate && bin/logstash-plugin install logstash-filter-json && logstash -f /etc/logstash/conf.d/logstash.conf'"
-    command: "sh -c 'bin/logstash-plugin install logstash-output-gelf && logstash -f /usr/share/logstash/config/logstash.conf'"
+    command: "sh -c 'bin/logstash-plugin install logstash-output-gelf && bin/logstash-plugin install logstash-filter-json && logstash -f /usr/share/logstash/config/logstash.conf'"
     networks:
       - apm
 
-  # http-graylog:
-  #   container_name: http-graylog
-  #   image: httpd:latest
-  #   restart: always
-  #   environment:                                                    
-  #     - "TZ=America/Sao_Paulo"
-  #   ports:
-  #     - "82:80"
-  #   tty: true
-  #   logging:
-  #     driver: gelf
-  #     options:
-  #       gelf-address: "udp://127.0.0.1:12202"
-  #       tag: "http-graylog-12202"
-  #   networks:
-  #     - apm
+  http-graylog:
+    container_name: http-graylog
+    image: httpd:latest
+    restart: always
+    environment:                                                    
+      - "TZ=America/Sao_Paulo"
+    ports:
+      - "82:80"
+    tty: true
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12202"
+        tag: "http-graylog-12202"
+    networks:
+      - apm
 
-  # http-logstash:
-  #   container_name: http-logstash
-  #   image: httpd:latest
-  #   restart: always
-  #   environment:                                                    
-  #     - "TZ=America/Sao_Paulo"
-  #   ports:
-  #     - "81:80"
-  #   logging:
-  #     driver: gelf
-  #     options:
-  #       gelf-address: "udp://127.0.0.1:12201"
-  #       tag: "http-logstash-12201"
-  #   networks:
-  #     - apm
+  http-logstash-graylog:
+    container_name: http-logstash-graylog
+    image: httpd:latest
+    restart: always
+    environment:                                                    
+      - "TZ=America/Sao_Paulo"
+    ports:
+      - "83:80"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://127.0.0.1:12203"
+        tag: "http-logstash-12203"
+    networks:
+      - apm
 
 networks: 
   apm:
